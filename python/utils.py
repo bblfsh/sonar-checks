@@ -18,6 +18,12 @@ class Argument:
                 types = list(bblfsh.filter(node, "//Identifier"))
                 if types:
                     self.type_name = types[0].properties['Name']
+                else:
+                    try:
+                        self.type_name = node.children[0].token
+                    except ValueError:
+                        self.type_name = ''
+
 
 
 class Method:
@@ -39,7 +45,6 @@ class Method:
 
                         for fc in c.children:
                             if fc.internal_type == "FunctionType":
-                                # FIXME: map arguments to objects
 
                                 for ftc in fc.children:
                                     if ftc.properties["internalRole"] == "Returns":
@@ -53,3 +58,7 @@ class Method:
 
             elif node.internal_type == "Modifier":
                 self.modifiers.append(node.token)
+
+
+def get_methods(node):
+    return [Method(i) for i in bblfsh.filter(node, "//TypeDeclaration//FunctionGroup")]
