@@ -72,7 +72,6 @@ class JClass:
                 self.name = c.properties["Name"]
 
             elif c.properties["internalRole"] == "superclassType":
-                print('XXX parent: ')
                 names = bblfsh.filter(c, "//Identifier")
                 self.parent = '.'.join([i.properties["Name"] for i in names])
 
