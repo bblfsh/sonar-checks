@@ -64,6 +64,7 @@ class JClass:
     def __init__(self, node):
         self.name = ''
         self.methods = []
+        self.fields = []
         self.parent = ''
         self.implements = []
 
@@ -80,6 +81,11 @@ class JClass:
                     names = bblfsh.filter(iface, "//Identifier")
                     names_qualified = '.'.join([i.properties["Name"] for i in names])
                     self.implements.append(names_qualified)
+
+            elif c.properties["internalRole"] == "bodyDeclarations":
+                    names = bblfsh.filter(c, "//FieldDeclaration/VariableDeclarationFragment//Identifier")
+                    names_qualified = '.'.join([i.properties["Name"] for i in names])
+                    self.fields.append(names_qualified)
 
         self.methods = get_methods(node)
 
