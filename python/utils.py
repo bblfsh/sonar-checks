@@ -54,7 +54,7 @@ class Method:
                                         self.arguments.append(Argument(ftc))
 
                             elif fc.internal_type == "Block":
-                                self.body = fc.children
+                                self.body = fc
 
             elif node.internal_type == "Modifier":
                 self.modifiers.append(node.token)
