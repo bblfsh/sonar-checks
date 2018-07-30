@@ -25,7 +25,6 @@ class Argument:
                         self.type_name = ''
 
 
-
 class Method:
     def __init__(self, node):
         nodes = node.children
