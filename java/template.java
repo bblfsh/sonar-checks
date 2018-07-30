@@ -1,0 +1,4 @@
+class XXX {
+    void test() {
+    }
+}
