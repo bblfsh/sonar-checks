@@ -60,5 +60,30 @@ class Method:
                 self.modifiers.append(node.token)
 
 
+class JClass:
+    def __init__(self, node):
+        self.name = ''
+        self.methods = []
+        self.parent = ''
+        self.implements = []
+
+        for c in node.children:
+            if c.properties["internalRole"] == "name":
+                self.name = c.properties["Name"]
+
+            elif c.properties["internalRole"] == "superclassType":
+                print('XXX parent: ')
+                names = bblfsh.filter(c, "//Identifier")
+                self.parent = '.'.join([i.properties["Name"] for i in names])
+
+            elif c.properties["internalRole"] == "superInterfaceTypes":
+                for iface in c.children:
+                    names = bblfsh.filter(iface, "//Identifier")
+                    names_qualified = '.'.join([i.properties["Name"] for i in names])
+                    self.implements.append(names_qualified)
+
+        self.methods = get_methods(node)
+
+
 def get_methods(node):
     return [Method(i) for i in bblfsh.filter(node, "//TypeDeclaration//FunctionGroup")]
