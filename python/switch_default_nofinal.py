@@ -9,8 +9,8 @@ if __name__ == '__main__':
 
     uast = client.parse("../java/switch_default_nofinal.java").uast
 
-    infixes = bblfsh.filter(uast, "//SwitchStatement")
-    for i in infixes:
+    switches = bblfsh.filter(uast, "//SwitchStatement")
+    for i in switches:
         cases = list(bblfsh.filter(i, "//SwitchCase"))
         if not cases:
             continue
