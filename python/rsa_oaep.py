@@ -1,4 +1,4 @@
-# check: https://rules.sonarsource.com/java/RSPEC-2278
+# check: https://rules.sonarsource.com/java/RSPEC-2277
 import utils
 
 import bblfsh
@@ -6,11 +6,12 @@ import bblfsh
 if __name__ == '__main__':
     client = bblfsh.BblfshClient("0.0.0.0:9432")
 
-    uast = client.parse("../java/des_desede.java").uast
+    uast = client.parse("../java/rsa_oaep.java").uast
     crypt_calls = bblfsh.filter(uast, "//MethodInvocation/String[@internalRole='arguments'"
-            " and @Value='DESede/ECB/PKCS5Padding']/parent::MethodInvocation/"
+            " and @Value='RSA/NONE/NoPadding']/parent::MethodInvocation/"
             "Identifier[@roleCall and @roleReceiver and @Name='Cipher']/parent::MethodInvocation/"
             "Identifier[@roleCall and @roleCallee and @Name='getInstance']/parent::MethodInvocation")
 
     for c in crypt_calls:
-        print("Don't use DESese cypher, use 'AES/GCM/NoPadding'")
+        print("Don't use 'RSA/NONE/NoPadding,' use 'RSA/ECB/OAEPWITHSHA-256ANDMGF1PADDING' instead"
+              " (line {})".format(c.start_position.line))

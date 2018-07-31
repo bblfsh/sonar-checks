@@ -3,6 +3,7 @@ class ThrowInFinally {
         try {
         } finally {
             throw new RuntimeException();
+            return;
         }
     }
 }

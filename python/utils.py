@@ -67,6 +67,7 @@ class JClass:
         self.fields = []
         self.parent = ''
         self.implements = []
+        self.node = node
 
         for c in node.children:
             if c.properties["internalRole"] == "name":
