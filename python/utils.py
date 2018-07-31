@@ -32,6 +32,7 @@ class Method:
         self.arguments = []
         self.name = ''
         self.return_ = None
+        self.body = None
 
         for node in nodes:
             if node.internal_type == "Alias":
