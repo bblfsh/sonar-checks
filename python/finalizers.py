@@ -19,4 +19,3 @@ if __name__ == '__main__':
     for m in methods:
         if m.return_ is None and m.name == "finalize":
             print("Don't override finalize()")
-
