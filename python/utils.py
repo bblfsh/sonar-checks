@@ -27,14 +27,15 @@ class Argument:
 
 class Method:
     def __init__(self, node):
-        nodes = node.children
+        self.node = node
+        children = node.children
         self.modifiers = []
         self.arguments = []
         self.name = ''
         self.return_ = None
         self.body = None
 
-        for node in nodes:
+        for node in children:
             if node.internal_type == "Alias":
 
                 for c in node.children:
