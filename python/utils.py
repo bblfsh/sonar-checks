@@ -113,21 +113,30 @@ def get_methods(node):
     return [Method(i) for i in bblfsh.filter(node, "//TypeDeclaration//FunctionGroup")]
 
 
-def hash_node(node):
+def hash_node(node, ignore_sideness=True):
     """ Hashes a node ignoring positional information """
     import hashlib
 
+    lroles = [str(i) for i in node.roles if i not in (bblfsh.role_id("LEFT"),
+                bblfsh.role_id("RIGHT"))]
+
     hash = hashlib.md5()
+    stuff = [node.internal_type, node.token] + lroles
 
-    stuff = [node.token, node.internal_type] + list(node.roles)
-
-    for prop in node.properties:
+    for prop, value in node.properties.items():
+        if ignore_sideness and 'left' in value.lower() or 'right' in value.lower():
+            continue
         stuff.append(prop)
+        stuff.append(value)
+
+    child_hashes = []
+    for child in node.children:
+        child_hashes.append(hash_node(child, ignore_sideness)
+                            .hexdigest().encode('utf-8'))
+
+    stuff.extend(sorted(child_hashes))
 
     for s in stuff:
         hash.update(str(s).encode('utf-8'))
-
-    for child in node.children:
-        hash.update(hash_node(child).hexdigest().encode('utf-8'))
 
     return hash

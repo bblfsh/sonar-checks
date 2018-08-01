@@ -5,6 +5,7 @@ class ElifRepeatedCondition {
         if (a == 1) {}
         else if (a == 2) {}
         else if (a == 1) {}
+        else if (1 == a) {}
         else {}
     }
 }
