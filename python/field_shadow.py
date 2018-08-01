@@ -21,7 +21,7 @@ for clname, cl in name2class.items():
 
     parent = name2class[cl.parent]
 
-    common = set(cl.fields) & set(parent.fields)
+    common = set([i.name for i in cl.fields]) & set([i.name for i in parent.fields])
     if len(common):
         print('Class {} uses field(s) with same name as parent {}: {}'.format(
             cl.name, parent.name, common))

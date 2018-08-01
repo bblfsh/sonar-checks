@@ -11,6 +11,6 @@ methods = utils.get_methods(uast)
 for m in methods:
     # Should look at the roles to filter by Boolean but there is a bug in the
     # Java driver https://github.com/bblfsh/java-driver/issues/83 so we check the token
-    if (m.return_.type_name == 'boolean'):
+    if m.return_.type_name == 'boolean':
         if any(list(bblfsh.filter(m.body, "//*[@roleReturn]//*[@roleNull]"))):
             print("Don't return Null on Boolean-return methods")

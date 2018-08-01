@@ -1,4 +1,4 @@
-# source.com/java/RSPEC-2761
+# check: https://rules.sonarsource.com/java/RSPEC-2757
 import utils
 
 import bblfsh

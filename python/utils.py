@@ -2,7 +2,6 @@ import bblfsh
 
 class Argument:
     def __init__(self, node):
-        self.name = ''
         self.init = None
         self.type_ = None
         self.type_name = ''
@@ -28,14 +27,13 @@ class Argument:
 class Method:
     def __init__(self, node):
         self.node = node
-        children = node.children
         self.modifiers = []
         self.arguments = []
         self.name = ''
         self.return_ = None
         self.body = None
 
-        for node in children:
+        for node in node.children:
             if node.internal_type == "Alias":
 
                 for c in node.children:
@@ -59,15 +57,35 @@ class Method:
             elif node.internal_type == "Modifier":
                 self.modifiers.append(node.token)
 
+class JClassField:
+    def __init__(self, node):
+        self.name = ''
+        self.node = node
+        self.modifiers = []
+        self.type_name = ''
+
+        name_node = list(bblfsh.filter(node, "//VariableDeclarationFragment/Identifier"))[0]
+        self.name = name_node.properties["Name"]
+
+        modifier_nodes = bblfsh.filter(node, "//Modifier")
+        for m in modifier_nodes:
+            self.modifiers.append(m.token)
+
+        type_node = list(bblfsh.filter(node, "//*[@roleType]"))[0]
+        if type_node.internal_type == "SimpleType":
+            self.type_name = list(bblfsh.filter(type_node, "//Identifier"))[0].properties["Name"]
+
 
 class JClass:
     def __init__(self, node):
         self.name = ''
         self.methods = []
-        self.fields = []
         self.parent = ''
         self.implements = []
         self.node = node
+
+        fields = bblfsh.filter(node, "//FieldDeclaration")
+        self.fields = [JClassField(i) for i in fields]
 
         for c in node.children:
             if c.properties["internalRole"] == "name":
@@ -83,10 +101,10 @@ class JClass:
                     names_qualified = '.'.join([i.properties["Name"] for i in names])
                     self.implements.append(names_qualified)
 
-            elif c.properties["internalRole"] == "bodyDeclarations":
-                    names = bblfsh.filter(c, "//FieldDeclaration/VariableDeclarationFragment//Identifier")
-                    names_qualified = '.'.join([i.properties["Name"] for i in names])
-                    self.fields.append(names_qualified)
+            # elif c.properties["internalRole"] == "bodyDeclarations":
+                    # names = bblfsh.filter(c, "//FieldDeclaration/VariableDeclarationFragment//Identifier")
+                    # names_qualified = '.'.join([i.properties["Name"] for i in names])
+                    # self.fields.append(names_qualified)
 
         self.methods = get_methods(node)
 

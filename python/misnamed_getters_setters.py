@@ -14,7 +14,7 @@ lowered_field_names = set()
 for cl in cl_nodes:
     jc = utils.JClass(cl)
 
-    for field in jc.fields:
+    for field in [i.name for i in jc.fields]:
         lowered_field_names.add(field.lower())
 
     for method in jc.methods:
