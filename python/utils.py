@@ -42,7 +42,6 @@ class Method:
                         self.name = c.properties["Name"]
 
                     elif c.internal_type == "Function":
-
                         for fc in c.children:
                             if fc.internal_type == "FunctionType":
 
