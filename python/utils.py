@@ -111,3 +111,23 @@ class JClass:
 
 def get_methods(node):
     return [Method(i) for i in bblfsh.filter(node, "//TypeDeclaration//FunctionGroup")]
+
+
+def hash_node(node):
+    """ Hashes a node ignoring positional information """
+    import hashlib
+
+    hash = hashlib.md5()
+
+    stuff = [node.token, node.internal_type] + list(node.roles)
+
+    for prop in node.properties:
+        stuff.append(prop)
+
+    for s in stuff:
+        hash.update(str(s).encode('utf-8'))
+
+    for child in node.children:
+        hash.update(hash_node(child).hexdigest().encode('utf-8'))
+
+    return hash
