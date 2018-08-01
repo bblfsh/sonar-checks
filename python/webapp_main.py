@@ -4,17 +4,16 @@ import re
 
 import bblfsh
 
-if __name__ == '__main__':
-    client = bblfsh.BblfshClient("0.0.0.0:9432")
+client = bblfsh.BblfshClient("0.0.0.0:9432")
 
-    uast = client.parse("../java/webapp_main.java").uast
+uast = client.parse("../java/webapp_main.java").uast
 
-    cl_nodes = bblfsh.filter(uast, "//*[@roleDeclaration and @roleType]")
-    jclasses = [utils.JClass(i) for i in cl_nodes]
+cl_nodes = bblfsh.filter(uast, "//*[@roleDeclaration and @roleType]")
+jclasses = [utils.JClass(i) for i in cl_nodes]
 
-    for jc in jclasses:
-        if jc.parent == 'HttpServlet':
-            mains = bblfsh.filter(uast, "//FunctionGroup//Alias/Identifier[@Name='main']")
-            for m in mains:
-                print("Don't use a main() function on HttpServlet derived classes "
-                      "(line {})".format(m.start_position.line))
+for jc in jclasses:
+    if jc.parent == 'HttpServlet':
+        mains = bblfsh.filter(uast, "//FunctionGroup//Alias/Identifier[@Name='main']")
+        for m in mains:
+            print("Don't use a main() function on HttpServlet derived classes "
+                  "(line {})".format(m.start_position.line))

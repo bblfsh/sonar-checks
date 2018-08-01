@@ -3,14 +3,13 @@ import utils
 
 import bblfsh
 
-if __name__ == '__main__':
-    client = bblfsh.BblfshClient("0.0.0.0:9432")
+client = bblfsh.BblfshClient("0.0.0.0:9432")
 
-    uast = client.parse("../java/synchonized_getclass.java").uast
+uast = client.parse("../java/synchonized_getclass.java").uast
 
-    cl_nodes = bblfsh.filter(uast, "//SynchronizedStatement/MethodInvocation"
-            "/ThisExpression/parent::MethodInvocation/Identifier[@Name='getClass']")
+cl_nodes = bblfsh.filter(uast, "//SynchronizedStatement/MethodInvocation"
+        "/ThisExpression/parent::MethodInvocation/Identifier[@Name='getClass']")
 
-    for node in cl_nodes:
-        print("Don't use this.getClass() to synchronize, use MyClass.class (line {})"
-                .format(node.start_position.line))
+for node in cl_nodes:
+    print("Don't use this.getClass() to synchronize, use MyClass.class (line {})"
+            .format(node.start_position.line))

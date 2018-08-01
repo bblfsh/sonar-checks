@@ -3,12 +3,11 @@ import utils
 
 import bblfsh
 
-if __name__ == '__main__':
-    client = bblfsh.BblfshClient("0.0.0.0:9432")
+client = bblfsh.BblfshClient("0.0.0.0:9432")
 
-    uast = client.parse("../java/interface_constants.java").uast
+uast = client.parse("../java/interface_constants.java").uast
 
-    cl_nodes = bblfsh.filter(uast, "//TypeDeclaration[@interface='true']/FieldDeclaration")
+cl_nodes = bblfsh.filter(uast, "//TypeDeclaration[@interface='true']/FieldDeclaration")
 
-    for cl in cl_nodes:
-        print("Interface should not define a constant (line {})".format(cl.start_position.line))
+for cl in cl_nodes:
+    print("Interface should not define a constant (line {})".format(cl.start_position.line))

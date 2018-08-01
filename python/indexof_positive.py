@@ -1,19 +1,17 @@
+# check: https://rules.sonarsource.com/java/RSPEC-2692
 import utils
 
 import bblfsh
 
-if __name__ == '__main__':
-    client = bblfsh.BblfshClient("0.0.0.0:9432")
+client = bblfsh.BblfshClient("0.0.0.0:9432")
 
-    uast = client.parse("../java/indexof_positive.java").uast
-    comps = bblfsh.filter(uast, "//InfixExpression[@roleGreaterThan]")
+uast = client.parse("../java/indexof_positive.java").uast
+comps = bblfsh.filter(uast, "//InfixExpression[@roleGreaterThan]")
 
-    for comp in comps:
-        mi = bblfsh.filter(comp, "//MethodInvocation")
-        m = bblfsh.filter(comp, "//MethodInvocation//Identifier[@Name='indexOf']")
-        for idx_call in m:
-            rights = bblfsh.filter(comp, "//NumberLiteral[@token='0']")
-            for r in rights:
-                if r.properties["internalRole"] == "rightOperand":
-                    print("indexOf greater than zero ignores the first field");
-
+for comp in comps:
+    m = bblfsh.filter(comp, "//MethodInvocation//Identifier[@Name='indexOf']")
+    for idx_call in m:
+        rights = bblfsh.filter(comp, "//NumberLiteral[@internalRole='rightOperand' and @token='0']")
+        for r in rights:
+            print("indexOf greater than zero ignores the first field at line {}"
+                    .format(r.start_position.line));
