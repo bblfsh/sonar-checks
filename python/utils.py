@@ -1,5 +1,7 @@
 import bblfsh
 
+from collections import defaultdict
+
 class Argument:
     def __init__(self, node):
         self.init = None
@@ -85,6 +87,7 @@ class JClass:
         self.parent = ''
         self.implements = []
         self.node = node
+        self.body_declarations = []
 
         fields = bblfsh.filter(node, "//FieldDeclaration")
         self.fields = [JClassField(i) for i in fields]
@@ -103,10 +106,8 @@ class JClass:
                     names_qualified = '.'.join([i.properties["Name"] for i in names])
                     self.implements.append(names_qualified)
 
-            # elif c.properties["internalRole"] == "bodyDeclarations":
-                    # names = bblfsh.filter(c, "//FieldDeclaration/VariableDeclarationFragment//Identifier")
-                    # names_qualified = '.'.join([i.properties["Name"] for i in names])
-                    # self.fields.append(names_qualified)
+            elif c.properties["internalRole"] == "bodyDeclarations":
+                self.body_declarations.append(c)
 
         self.methods = get_methods(node)
 
@@ -142,3 +143,46 @@ def hash_node(node, ignore_sideness=True):
         hash.update(str(s).encode('utf-8'))
 
     return hash
+
+def instanced_calls(root_node, type_name, method_name):
+    """
+    Detect a call from a symbol previously instanced from a certain type. This is
+    somewhat fuzzy because it will give false positives for another symbol with
+    the same name declared from another type, an improvement would se
+    """
+
+    # key: class name, value: list of usage positions
+    all_usages = []
+
+    def search_usages(instance_node, search_node):
+        these_usages = []
+
+        instance_search_query = "//VariableDeclarationFragment/ClassInstanceCreation" +\
+                        "/SimpleType/Identifier[@Name='%s']" % type_name +\
+                        "/ancestor::VariableDeclarationFragment/Identifier"
+
+        usage_search_query = "//*[@roleCall and @roleReceiver and @Name='%s']/" +\
+                            "parent::*/Identifier[@roleCall and @roleCallee and " +\
+                            "@Name='{}']".format(method_name)
+
+        vars = bblfsh.filter(instance_node, instance_search_query)
+
+        for var in vars:
+            usages = bblfsh.filter(search_node, usage_search_query % var.properties["Name"])
+            these_usages.extend(list(usages))
+
+        return these_usages
+
+    jclasses = [JClass(i) for i in bblfsh.filter(root_node,
+                    "//*[@roleType and @roleDeclaration]")]
+
+    for jc in jclasses:
+        # Get usages of the instance declarations in all the class
+        for bd in jc.fields:
+            all_usages.extend(search_usages(bd.node, jc.node))
+
+        # Get the usages of the inside-method declarations inside their own methods
+        for method in jc.methods:
+            all_usages.extend(search_usages(method.body, method.body))
+
+    return all_usages

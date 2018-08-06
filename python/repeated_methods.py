@@ -11,9 +11,6 @@ jclasses = [utils.JClass(i) for i in bblfsh.filter(uast, "//*[@roleDeclaration a
 
 for cl in jclasses:
     hash2methods = {}
-    # print(cl.methods)
-    # class_method_hashes = {utils.hash_node(m.body).hexdigest() for m in cl.methods}
-    # print(class_method_hashes)
 
     for m in cl.methods:
         body_hash = utils.hash_node(m.body).hexdigest()
