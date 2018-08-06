@@ -5,6 +5,7 @@ class Argument:
         self.init = None
         self.type_ = None
         self.type_name = ''
+        self.name = ''
         self.variadic = node.properties['Variadic'] == 'true'
         self.map_variadic = node.properties['MapVariadic'] == 'true'
         self.receiver = node.properties['Receiver'] == 'true'
@@ -22,7 +23,8 @@ class Argument:
                         self.type_name = node.children[0].token
                     except ValueError:
                         self.type_name = ''
-
+            elif c.properties["internalRole"] == "Name":
+                self.name = c.properties["Name"]
 
 class Method:
     def __init__(self, node):
