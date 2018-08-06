@@ -4,6 +4,7 @@ This repo contains the implementation of some
 [SonarSource](https://rules.sonarsource.com/java) Java checks using the
 [bblfsh](https://doc.bblf.sh/) project.
 
+This repository is intended both a test and a demo of bblfsh capabilities.
 
 ## How to run
 
