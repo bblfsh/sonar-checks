@@ -125,7 +125,7 @@ def hash_node(node, ignore_sideness=True):
     hash = hashlib.md5()
     stuff = [node.internal_type, node.token] + lroles
 
-    for prop, value in node.properties.items():
+    for prop, value in sorted(node.properties.items()):
         if ignore_sideness and 'left' in value.lower() or 'right' in value.lower():
             continue
         stuff.append(prop)
