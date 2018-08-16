@@ -1,3 +1,5 @@
+# check: https://rules.sonarsource.com/java/RSPEC-1845
+
 import utils
 
 import bblfsh

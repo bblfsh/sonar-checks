@@ -1,8 +1,11 @@
+import importlib
 import os
+from typing import List, Dict, Any
 
 import bblfsh
 
-from collections import defaultdict
+THIS_PATH = os.path.dirname(os.path.abspath(__file__))
+
 
 class Argument:
     def __init__(self, node):
@@ -29,6 +32,7 @@ class Argument:
                         self.type_name = ''
             elif c.properties["internalRole"] == "Name":
                 self.name = c.properties["Name"]
+
 
 class Method:
     def __init__(self, node):
@@ -62,6 +66,7 @@ class Method:
 
             elif node.internal_type == "Modifier":
                 self.modifiers.append(node.token)
+
 
 class JClassField:
     def __init__(self, node):
@@ -123,9 +128,9 @@ def hash_node(node, ignore_sideness=True):
     import hashlib
 
     lroles = [str(i) for i in node.roles if i not in (bblfsh.role_id("LEFT"),
-                bblfsh.role_id("RIGHT"))]
+                                                      bblfsh.role_id("RIGHT"))]
 
-    hash = hashlib.md5()
+    _hash = hashlib.md5()
     stuff = [node.internal_type, node.token] + lroles
 
     for prop, value in sorted(node.properties.items()):
@@ -142,9 +147,10 @@ def hash_node(node, ignore_sideness=True):
     stuff.extend(sorted(child_hashes))
 
     for s in stuff:
-        hash.update(str(s).encode('utf-8'))
+        _hash.update(str(s).encode('utf-8'))
 
-    return hash
+    return _hash
+
 
 def instanced_calls(root_node, type_name, method_name):
     """
@@ -159,24 +165,23 @@ def instanced_calls(root_node, type_name, method_name):
     def search_usages(instance_node, search_node):
         these_usages = []
 
-        instance_search_query = "//VariableDeclarationFragment/ClassInstanceCreation" +\
-                        "/SimpleType/Identifier[@Name='%s']" % type_name +\
-                        "/ancestor::VariableDeclarationFragment/Identifier"
+        instance_search_query = "//VariableDeclarationFragment/ClassInstanceCreation" + \
+                                "/SimpleType/Identifier[@Name='%s']" % type_name + \
+                                "/ancestor::VariableDeclarationFragment/Identifier"
 
-        usage_search_query = "//*[@roleCall and @roleReceiver and @Name='%s']/" +\
-                            "parent::*/Identifier[@roleCall and @roleCallee and " +\
-                            "@Name='{}']".format(method_name)
+        usage_search_query = "//*[@roleCall and @roleReceiver and @Name='%s']/" + \
+                             "parent::*/Identifier[@roleCall and @roleCallee and " + \
+                             "@Name='{}']".format(method_name)
 
-        vars = bblfsh.filter(instance_node, instance_search_query)
+        _vars = bblfsh.filter(instance_node, instance_search_query)
 
-        for var in vars:
+        for var in _vars:
             usages = bblfsh.filter(search_node, usage_search_query % var.properties["Name"])
             these_usages.extend(list(usages))
 
         return these_usages
 
-    jclasses = [JClass(i) for i in bblfsh.filter(root_node,
-                    "//*[@roleType and @roleDeclaration]")]
+    jclasses = [JClass(i) for i in bblfsh.filter(root_node, "//*[@roleType and @roleDeclaration]")]
 
     for jc in jclasses:
         # Get usages of the instance declarations in all the class
@@ -191,4 +196,67 @@ def instanced_calls(root_node, type_name, method_name):
 
 
 def get_fixtures_dir():
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
+    return os.path.join(THIS_PATH, "fixtures")
+
+
+class RunCheckException(Exception):
+    pass
+
+
+_CLIENT = None
+
+
+# FIXME XXX: get either path or uast, not both or autodetect
+def run_check(check_code: str, lang: str, uast=None, src_path: str=None) -> List[Dict[str, Any]]:
+    global _CLIENT
+
+    if uast and src_path:
+        raise RunCheckException("Use either a uast node object or a src_path, not both")
+
+    if not uast and not src_path:
+        raise RunCheckException("Missing source parameter, pass either 'uast' or 'src_path'")
+
+    if src_path and (not os.path.exists(src_path) or not os.path.isfile(src_path)):
+        raise RunCheckException("Source path doesn't exists: ", src_path)
+
+    if isinstance(uast, str):
+        raise RunCheckException("uast parameter must be a node, not a string")
+
+    check_code = check_code.upper()
+    check_path = os.path.join(THIS_PATH, "checks", lang, check_code + ".py")
+
+    if not os.path.exists(check_path):
+        raise RunCheckException("Could not find check '{}' for language '{}'"
+                                .format(check_code, lang))
+
+    check_module = importlib.import_module("bblfsh_sonar_checks.checks.{}.{}".format(lang, check_code))
+
+    if not uast:
+        # FIXME XXX: remove hardcodings, get from settings/command line
+        if not _CLIENT:
+            _CLIENT = bblfsh.BblfshClient("0.0.0.0:9432")
+        # FIXME XXX: check for errors instead of directly getting the uast
+        res = _CLIENT.parse(src_path)
+
+        if res.status != 0:
+            raise RunCheckException("Error parsing file {}: {}".format(src_path, res.errors))
+
+        uast = res.uast
+
+    checks = check_module.check(uast)
+    for c in checks:
+        if "pos" not in c:
+            c["pos"] = None
+
+    return checks
+
+
+def run_default_fixture(path, check_fnc):
+    from pprint import pprint
+
+    client = bblfsh.BblfshClient("0.0.0.0:9432")
+    fixture_path = "../../fixtures/java/" + os.path.split(path)[1][:-3] + ".java"
+    pprint(check_fnc(client.parse(fixture_path).uast))
+
+
+# FIXME XXX ADD: run_checks(check_codes, lang, uast)
