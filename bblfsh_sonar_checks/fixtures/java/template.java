@@ -1,4 +1,0 @@
-class XXX {
-    void test() {
-    }
-}
