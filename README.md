@@ -9,9 +9,13 @@ This repository is intended both a test and a demo of bblfsh capabilities.
 ## How to run
 
 ```bash
-pip install bblfsh
 docker run -d --name bblfshd --privileged -p 9432:9432 bblfsh/bblfshd
+pip install bblfsh_sonar_checks
+sonarbblfsh --language=java --enable=RSPEC-1143,RSPEC-2975 somefile.java
 ```
 
-And then go to the `checks/java` subdirectory and run the checks. Every check will
-be run against a Java file with the same name in the `java` directory.
+You can list the available checks along with the description URL with:
+
+```bash
+sonarbblfsh --language=java --list
+```
