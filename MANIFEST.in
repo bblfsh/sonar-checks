@@ -1,0 +1,6 @@
+include *.md
+include *.txt
+include DCO
+include LICENSE
+include MAINTAINERS
+include bblfsh_sonar_checks/fixtures/java/*

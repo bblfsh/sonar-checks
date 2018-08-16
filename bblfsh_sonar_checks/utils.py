@@ -1,3 +1,5 @@
+import os
+
 import bblfsh
 
 from collections import defaultdict
@@ -186,3 +188,7 @@ def instanced_calls(root_node, type_name, method_name):
             all_usages.extend(search_usages(method.body, method.body))
 
     return all_usages
+
+
+def get_fixtures_dir():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
