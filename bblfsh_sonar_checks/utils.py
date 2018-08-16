@@ -1,3 +1,4 @@
+import glob
 import importlib
 import os
 from typing import List, Dict, Any
@@ -230,9 +231,19 @@ def run_checks(check_codes: List[str], lang: str, uast) -> Dict[str, List[Dict[s
     return res
 
 
-def run_default_fixture(path, check_fnc):
+def run_default_fixture(path, check_fnc, conn_str: str = "0.0.0.0:9432"):
     from pprint import pprint
 
-    client = bblfsh.BblfshClient("0.0.0.0:9432")
+    client = bblfsh.BblfshClient(conn_str)
     fixture_path = "../../fixtures/java/" + os.path.split(path)[1][:-3] + ".java"
     pprint(check_fnc(client.parse(fixture_path).uast))
+
+
+def list_checks(lang: str) -> List[str]:
+    checks_path = os.path.join(THIS_PATH, "checks", lang)
+    return [i.split("/")[-1][:-3] for i in glob.glob(checks_path + "/RSPEC-*")]
+
+
+def get_check_description(check: str, lang: str) -> str:
+    # FIXME: Improve this so it returns the descriptive text inside the HTML
+    return "https://rules.sonarsource.com/j{}/{}".format(lang, check)
