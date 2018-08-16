@@ -33,4 +33,9 @@ setup(
             "Programming Language :: Python :: 3.7",
             "Topic :: Software Development :: Libraries"
         ],
+        entry_points={
+            "console_scripts": [
+                "sonarbblfsh = bblfsh_sonar_checks.__main__:main"
+            ]
+        },
 )

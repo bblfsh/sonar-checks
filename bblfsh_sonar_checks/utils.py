@@ -246,4 +246,4 @@ def list_checks(lang: str) -> List[str]:
 
 def get_check_description(check: str, lang: str) -> str:
     # FIXME: Improve this so it returns the descriptive text inside the HTML
-    return "https://rules.sonarsource.com/j{}/{}".format(lang, check)
+    return "https://rules.sonarsource.com/{}/{}".format(lang, check)
