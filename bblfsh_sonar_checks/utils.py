@@ -203,25 +203,7 @@ class RunCheckException(Exception):
     pass
 
 
-_CLIENT = None
-
-
-# FIXME XXX: get either path or uast, not both or autodetect
-def run_check(check_code: str, lang: str, uast=None, src_path: str=None) -> List[Dict[str, Any]]:
-    global _CLIENT
-
-    if uast and src_path:
-        raise RunCheckException("Use either a uast node object or a src_path, not both")
-
-    if not uast and not src_path:
-        raise RunCheckException("Missing source parameter, pass either 'uast' or 'src_path'")
-
-    if src_path and (not os.path.exists(src_path) or not os.path.isfile(src_path)):
-        raise RunCheckException("Source path doesn't exists: ", src_path)
-
-    if isinstance(uast, str):
-        raise RunCheckException("uast parameter must be a node, not a string")
-
+def run_check(check_code: str, lang: str, uast) -> List[Dict[str, Any]]:
     check_code = check_code.upper()
     check_path = os.path.join(THIS_PATH, "checks", lang, check_code + ".py")
 
@@ -230,25 +212,22 @@ def run_check(check_code: str, lang: str, uast=None, src_path: str=None) -> List
                                 .format(check_code, lang))
 
     check_module = importlib.import_module("bblfsh_sonar_checks.checks.{}.{}".format(lang, check_code))
-
-    if not uast:
-        # FIXME XXX: remove hardcodings, get from settings/command line
-        if not _CLIENT:
-            _CLIENT = bblfsh.BblfshClient("0.0.0.0:9432")
-        # FIXME XXX: check for errors instead of directly getting the uast
-        res = _CLIENT.parse(src_path)
-
-        if res.status != 0:
-            raise RunCheckException("Error parsing file {}: {}".format(src_path, res.errors))
-
-        uast = res.uast
-
     checks = check_module.check(uast)
+
     for c in checks:
         if "pos" not in c:
             c["pos"] = None
 
     return checks
+
+
+def run_checks(check_codes: List[str], lang: str, uast) -> Dict[str, List[Dict[str, Any]]]:
+    res: Dict[str, List[Dict[str, Any]]] = {}
+
+    for code in check_codes:
+        res[code] = run_check(code, lang, uast)
+
+    return res
 
 
 def run_default_fixture(path, check_fnc):
@@ -257,6 +236,3 @@ def run_default_fixture(path, check_fnc):
     client = bblfsh.BblfshClient("0.0.0.0:9432")
     fixture_path = "../../fixtures/java/" + os.path.split(path)[1][:-3] + ".java"
     pprint(check_fnc(client.parse(fixture_path).uast))
-
-
-# FIXME XXX ADD: run_checks(check_codes, lang, uast)
