@@ -209,6 +209,7 @@ def get_languages():
         res.append(p)
     return res
 
+
 def get_fixtures_dir():
     return os.path.join(THIS_PATH, "fixtures")
 
