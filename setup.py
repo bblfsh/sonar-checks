@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 description = long_descr = "Library implementing Sonar Source checks using the babelfish project"
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 setup(
         name = "bblfsh_sonar_checks",
