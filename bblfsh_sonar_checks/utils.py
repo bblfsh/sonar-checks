@@ -1,6 +1,8 @@
 import glob
 import importlib
+import inspect
 import os
+import sys
 from typing import List, Dict, Any
 
 import bblfsh
@@ -195,9 +197,16 @@ def instanced_calls(root_node, type_name, method_name):
 
     return all_usages
 
+def get_languages():
+    langs_dir = os.path.join(THIS_PATH, "checks")
+    return [i for i in os.listdir(langs_dir) if os.path.isdir(os.path.join(langs_dir, i))]
 
 def get_fixtures_dir():
     return os.path.join(THIS_PATH, "fixtures")
+
+
+def get_checks_dir(lang: str):
+    return os.path.join(THIS_PATH, "checks", lang)
 
 
 class RunCheckException(Exception):
@@ -231,11 +240,16 @@ def run_checks(check_codes: List[str], lang: str, uast) -> Dict[str, List[Dict[s
     return res
 
 
+# FIXME XXX: hardocded java, get it from the module path from the function metadata
 def run_default_fixture(path, check_fnc, conn_str: str = "0.0.0.0:9432"):
     from pprint import pprint
 
     client = bblfsh.BblfshClient(conn_str)
-    fixture_path = "../../fixtures/java/" + os.path.split(path)[1][:-3] + ".java"
+    language = os.path.split(os.path.abspath(inspect.getfile(check_fnc)))[-3:-2]
+    print("XXX language: ", language)
+    print("XXX THIS_PATH: ", os.path.join(THIS_PATH, "fixtures"), language)
+    fixture_path = os.path.join(THIS_PATH, "fixtures", language, os.path.split(path)[1][:-3] + ".java")
+    print("XXX fixture_path", fixture_path)
     pprint(check_fnc(client.parse(fixture_path).uast))
 
 
