@@ -1,0 +1,22 @@
+language: python
+sudo: true
+dist: xenial
+services:
+  - docker
+cache:
+  directories:
+    - $HOME/.cache/pip
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7"
+install:
+  - pip3 install --upgrade pip
+  - pip3 install -r requirements.txt
+  - pip3 install . --upgrade
+script:
+  - docker run --name bblfshd -d --privileged -p 9432:9432 bblfsh/bblfshd
+  - docker exec -it bblfshd bblfshctl driver install java bblfsh/java-driver:v2.1.0
+  - cd tests && python3 -m unittest discover -v
+notifications:
+  email: false

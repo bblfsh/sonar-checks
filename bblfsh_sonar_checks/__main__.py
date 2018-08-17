@@ -8,8 +8,6 @@ from bblfsh_sonar_checks import (
         run_check, run_checks, list_checks, get_check_description
 )
 
-# FIXME XXX: allow to specify just the check number, without the RSPEC- prefix
-# FIXME XXX:
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--language", type=str, help="Language for the file or listings", required=True)
