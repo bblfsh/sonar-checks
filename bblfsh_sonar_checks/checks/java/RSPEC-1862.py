@@ -13,11 +13,16 @@ def check(uast):
             if bblfsh.role_id("CONDITION") in child.roles:
                 return utils.hash_node(child).hexdigest()
 
-        raise Exception("Could not hash node")
+        return None
 
     for if_node in if_nodes:
         condition_hashes = set()
-        condition_hashes.add(hash_condition(if_node))
+        cond_hash = hash_condition(if_node)
+
+        if not cond_hash:
+            continue
+
+        condition_hashes.add(cond_hash)
 
         for else_node in bblfsh.filter(if_node, "//*[@roleElse and @roleIf and @roleStatement]"):
             h = hash_condition(else_node)

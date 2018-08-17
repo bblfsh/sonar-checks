@@ -8,7 +8,7 @@ def check(uast):
     methods = utils.get_methods(uast)
 
     for m in methods:
-        if m.name == "equals" and m.return_.type_name == "boolean" and \
+        if m.name == "equals" and m.return_ and m.return_.type_name == "boolean" and \
                 "public" in m.modifiers:
             args = m.arguments
             if len(args) != 1:

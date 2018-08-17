@@ -33,7 +33,7 @@ def check(uast):
         for property_, getter in getters.items():
             try:
                 setter = setters[property_]
-            except IndexError:
+            except KeyError:
                 continue
 
             sync = 'synchronized'

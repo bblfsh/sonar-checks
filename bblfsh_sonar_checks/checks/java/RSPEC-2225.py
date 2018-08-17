@@ -11,9 +11,9 @@ def check(uast):
     methods = utils.get_methods(uast)
 
     for m in methods:
-        if (m.name == "toString" and "public" in m.modifiers and m.return_.type_name == "String"
+        if (m.name == "toString" and "public" in m.modifiers and m.return_ and m.return_.type_name == "String"
                and not m.arguments) or\
-           (m.name == "clone" and "public" in m.modifiers and m.return_.type_name == "Object"
+           (m.name == "clone" and "public" in m.modifiers and m.return_ and m.return_.type_name == "Object"
                and not m.arguments):
             if returnsNull(m.node):
                 findings.append({"msg": "Don't return Null on toString or clone methods",

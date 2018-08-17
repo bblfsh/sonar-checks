@@ -16,7 +16,7 @@ def check(uast):
             continue
 
         for tup in bad_methods:
-            if method.name == tup[0] and method.return_.type_name == tup[1]:
+            if method.name == tup[0] and method.return_ and method.return_.type_name == tup[1]:
                 findings.append({"msg": "Probably misnamed method '{}' instead of '{}'"
                                     .format(method.name, tup[2]),
                                  "pos": method.node.start_position})

@@ -6,7 +6,7 @@ def check(uast):
     findings = []
 
     if any(filter(lambda m: m.name == "clone" and "public" in m.modifiers and
-        m.return_.type_name == "Object", utils.get_methods(uast))):
+        m.return_ and m.return_.type_name == "Object", utils.get_methods(uast))):
 
         findings.append({"msg": "Don't use clone"})
 
