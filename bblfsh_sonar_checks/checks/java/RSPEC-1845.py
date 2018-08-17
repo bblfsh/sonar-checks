@@ -4,8 +4,6 @@ import bblfsh
 
 def check(uast):
     findings = []
-
-    classes = []
     name2class = {}
 
     cl_nodes = bblfsh.filter(uast, "//*[@roleDeclaration and @roleType]")
@@ -20,7 +18,11 @@ def check(uast):
 
         methods = cl.methods
         for method in methods:
-            for parmethod in name2class[cl.parent].methods:
+            par_class = name2class.get(cl.parent)
+            if not par_class:
+                continue
+
+            for parmethod in par_class.methods:
                 if parmethod.name != method.name and \
                    parmethod.name.lower() == method.name.lower():
 

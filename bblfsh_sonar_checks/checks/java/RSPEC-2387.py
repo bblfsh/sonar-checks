@@ -18,7 +18,9 @@ def check(uast):
         if not cl.parent:
             continue
 
-        parent = name2class[cl.parent]
+        parent = name2class.get(cl.parent)
+        if not parent:
+            continue
 
         common = set([i.name for i in cl.fields]) & set([i.name for i in parent.fields])
         if len(common):

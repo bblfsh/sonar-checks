@@ -12,6 +12,7 @@ def check(uast):
         for child in if_node.children:
             if bblfsh.role_id("CONDITION") in child.roles:
                 return utils.hash_node(child).hexdigest()
+
         raise Exception("Could not hash node")
 
     for if_node in if_nodes:

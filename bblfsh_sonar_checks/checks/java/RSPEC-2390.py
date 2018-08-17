@@ -27,9 +27,14 @@ def check(uast):
     for cl in parent2children:
         for child in parent2children[cl]:
             # Alternative: generate a string with all the child names in the Identifier selector
-            calls = bblfsh.filter(name2class[cl],
+            child_cl = name2class.get(cl)
+            if not child_cl:
+                continue
+
+            calls = bblfsh.filter(child_cl,
                     "(//MethodInvocation//Identifier[@roleCall and @roleReceiver and @Name='%s']|"
                     "//QualifiedIdentifier//Identifier[@Name='%s'])" % (child, child))
+
             for call in calls:
                 findings.append({"msg": "Call in class {} to subclass {} member".format(cl, child),
                                  "pos": call.start_position.line})

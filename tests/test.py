@@ -1,18 +1,15 @@
-from bblfsh_sonar_checks.utils import (
-        get_checks_dir, get_languages, run_default_fixture
-)
-
 import importlib
 import os
+from typing import Dict, Any, List
 import unittest
 
-# FIXME XXX: Write the tests:
-"""
-Test should do at a minimum:
-    - Run each check with its default java file and check that there are results.
-    - Run each check with all other others java files and check that it doesn't crash.
-    - Run each class, method and function in the utils module
-"""
+from bblfsh_sonar_checks.utils import (
+        get_checks_dir, get_languages, run_default_fixture, get_fixtures_dir,
+        list_checks, run_check
+)
+
+import bblfsh
+
 
 def _get_check_modules(lang):
     checks_dir = get_checks_dir(lang)
@@ -33,7 +30,35 @@ def _get_check_modules(lang):
 
 class CheckTests(unittest.TestCase):
 
-    def test_own_fixtures(self):
-        for lang in get_languages():
-            for module, path in _get_check_modules(lang):
-                run_default_fixture(path, module.check)
+    def setUp(self):
+        self.languages = get_languages()
+        self.check_funcs: Dict[str, Dict[str, Any]] = {}
+        self.fixtures: Dict[str, List[str]] = {}
+
+        fixtures_dir = get_fixtures_dir()
+
+        for lang in self.languages:
+            self.check_funcs[lang] = {path: module.check for (module, path) in _get_check_modules(lang)}
+            self.fixtures[lang] = [os.path.join(fixtures_dir, lang, i)
+                                   for i in os.listdir(os.path.join(fixtures_dir, lang))]
+
+        self.client = bblfsh.BblfshClient("0.0.0.0:9432")
+        # FIXME XXX: call bblfsh.ensure_bblfsh_is_running
+
+
+    def test_10_own_fixtures(self):
+        for lang, checks in self.check_funcs.items():
+            for check_path, check_func in checks.items():
+                res = run_default_fixture(check_path, check_func, silent=True)
+                self.assertGreater(len(res), 0)
+
+    def test_20_other_fixtures(self):
+        for lang in self.fixtures:
+            for check_code in list_checks(lang):
+                for fixture in self.fixtures[lang]:
+                    if check_code in fixture:
+                        continue
+
+                    resp = self.client.parse(fixture)
+                    self.assertEqual(resp.status, 0)
+                    run_check(check_code, lang, resp.uast)
