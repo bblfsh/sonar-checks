@@ -8,7 +8,6 @@ from bblfsh_sonar_checks import (
         run_check, run_checks, list_checks, get_check_description
 )
 
-
 # FIXME XXX: allow to specify just the check number, without the RSPEC- prefix
 # FIXME XXX:
 def parse_arguments() -> argparse.Namespace:
@@ -22,15 +21,29 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("file", type=str, nargs="?", help="Input file to parse")
     args = parser.parse_args()
 
+    def _convert_checkname(check):
+        ncheck = check
+
+        if not check.startswith("RSPEC-"):
+            if not check.isdigit():
+                print("Wrong check format, use RSPEC-#### or just the number: ", check)
+                parser.print_help()
+                sys.exit(1)
+            else:
+                ncheck = "RSPEC-{}".format(check)
+
+        return ncheck
+
+
     args.checks: Set[str] = set()
 
     if args.enable:
-        args.checks = {i.strip() for i in args.enable.split(",")}
+        args.checks = {_convert_checkname(i.strip()) for i in args.enable.split(",")}
     else:
         args.checks = list_checks(args.language)
 
     if args.disable:
-        disabled = {i.strip() for i in args.disabled.split(",")}
+        disabled = {_convert_checkname(i.strip()) for i in args.disable.split(",")}
         for disable in disabled:
             args.checks.remove(disable)
 
