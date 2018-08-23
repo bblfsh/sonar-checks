@@ -6,4 +6,7 @@ class ThrowInFinally {
             return;
         }
     }
+    void test2() {
+        throw new RuntimeException();
+    }
 }
