@@ -8,11 +8,14 @@ def check(uast):
     fnls = bblfsh.filter(uast, "//*[@roleFinally]")
 
     for f in fnls:
-        throws = bblfsh.filter(uast, "//*[@roleThrow or @roleReturn]")
+        throws = bblfsh.filter(f, "//*[@roleThrow or @roleReturn]")
 
         for t in throws:
-            findings.append({"msg": "Don't throw or return inside a finally (line {})",
-                             "pos": t.start_position})
+            findings.append({
+                "msg": "Don't throw or return inside a finally (line {})".format(
+                        t.start_position.col),
+                "pos": t.start_position
+            })
 
     return findings
 
