@@ -1,6 +1,7 @@
 import glob
 import importlib
 import inspect
+import json
 import os
 import sys
 from typing import List, Dict, Any
@@ -222,7 +223,9 @@ class RunCheckException(Exception):
     pass
 
 
-def run_check(check_code: str, lang: str, uast) -> List[Dict[str, Any]]:
+def run_check(check_code: str, lang: str, uast, json_result: bool = False) \
+        -> List[Dict[str, Any]]:
+
     check_code = check_code.upper()
     check_path = os.path.join(THIS_PATH, "checks", lang, check_code + ".py")
 
@@ -236,15 +239,23 @@ def run_check(check_code: str, lang: str, uast) -> List[Dict[str, Any]]:
     for c in checks:
         if "pos" not in c:
             c["pos"] = None
+        else:
+            p = c["pos"]
+            c["pos"] = {"line": p.line, "col": p.col, "offset": p.offset}
+
+    if json_result:
+        checks = [json.dumps(i) for i in checks]
 
     return checks
 
 
-def run_checks(check_codes: List[str], lang: str, uast) -> Dict[str, List[Dict[str, Any]]]:
+def run_checks(check_codes: List[str], lang: str, uast, json_result: bool = False) \
+        -> Dict[str, List[Dict[str, Any]]]:
+
     res: Dict[str, List[Dict[str, Any]]] = {}
 
     for code in check_codes:
-        res[code] = run_check(code, lang, uast)
+        res[code] = run_check(code, lang, uast, json_result)
 
     return res
 

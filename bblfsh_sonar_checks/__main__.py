@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import sys
 from typing import Set
 
@@ -68,10 +69,9 @@ def main() -> None:
     client = bblfsh.BblfshClient(args.ip + ":" + args.port)
     parse_result = client.parse(args.file)
     if parse_result.status != 0:
-        print(parse_result.errors)
+        print(json.dumps(parse_result.errors))
 
-    pprint(run_checks(args.checks, args.language, parse_result.uast))
-
+    print(run_checks(args.checks, args.language, parse_result.uast, json_result=True))
 
 if __name__ == "__main__":
     main()
