@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import sys
 from typing import Set
 
 from bblfsh_sonar_checks import (
-        run_check, run_checks, list_checks, get_check_description
+        run_checks, list_checks, get_check_description
 )
+
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
@@ -31,7 +33,6 @@ def parse_arguments() -> argparse.Namespace:
                 ncheck = "RSPEC-{}".format(check)
 
         return ncheck
-
 
     args.checks: Set[str] = set()
 
@@ -62,15 +63,14 @@ def _list(lang):
 def main() -> None:
     args = parse_arguments()
 
-    import  bblfsh
-    from pprint import pprint
+    import bblfsh
 
     client = bblfsh.BblfshClient(args.ip + ":" + args.port)
     parse_result = client.parse(args.file)
     if parse_result.status != 0:
-        print(parse_result.errors)
+        print(json.dumps(parse_result.errors))
 
-    pprint(run_checks(args.checks, args.language, parse_result.uast))
+    print(json.dumps(run_checks(args.checks, args.language, parse_result.uast, json_result=False)))
 
 
 if __name__ == "__main__":

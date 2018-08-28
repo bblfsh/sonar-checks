@@ -1,17 +1,21 @@
 import glob
+import hashlib
 import importlib
 import inspect
+import json
 import os
-import sys
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Union, cast, Callable
 
 import bblfsh
 
 THIS_PATH = os.path.dirname(os.path.abspath(__file__))
+Check = Dict[str, Any]
+Checks = List[Check]
+CheckFnc = Callable[[bblfsh.Node], Checks]
 
 
 class Argument:
-    def __init__(self, node):
+    def __init__(self, node: bblfsh.Node) -> None:
         self.init = None
         self.type_ = None
         self.type_name = ''
@@ -38,13 +42,13 @@ class Argument:
 
 
 class Method:
-    def __init__(self, node):
+    def __init__(self, node: bblfsh.Node) -> None:
         self.node = node
-        self.modifiers = []
-        self.arguments = []
+        self.modifiers: List[str] = []
+        self.arguments: List[Argument] = []
         self.name = ''
-        self.return_ = None
-        self.body = None
+        self.return_: Optional[Argument] = None
+        self.body: bblfsh.Node = None
 
         for node in node.children:
             if node.internal_type == "Alias":
@@ -72,10 +76,10 @@ class Method:
 
 
 class JClassField:
-    def __init__(self, node):
+    def __init__(self, node: bblfsh.Node) -> None:
         self.name = ''
         self.node = node
-        self.modifiers = []
+        self.modifiers: List[str] = []
         self.type_name = ''
 
         name_node = list(bblfsh.filter(node, "//VariableDeclarationFragment/Identifier"))[0]
@@ -91,13 +95,13 @@ class JClassField:
 
 
 class JClass:
-    def __init__(self, node):
+    def __init__(self, node: bblfsh.Node) -> None:
         self.name = ''
-        self.methods = []
+        self.methods: List[Method] = []
         self.parent = ''
-        self.implements = []
+        self.implements: List[str] = []
         self.node = node
-        self.body_declarations = []
+        self.body_declarations: List[bblfsh.Node] = []
 
         fields = bblfsh.filter(node, "//FieldDeclaration")
         self.fields = [JClassField(i) for i in fields]
@@ -122,13 +126,12 @@ class JClass:
         self.methods = get_methods(node)
 
 
-def get_methods(node):
+def get_methods(node: bblfsh.Node) -> List[Method]:
     return [Method(i) for i in bblfsh.filter(node, "//TypeDeclaration//FunctionGroup")]
 
 
-def hash_node(node, ignore_sideness=True):
+def hash_node(node: bblfsh.Node, ignore_sideness: bool=True) -> hashlib._hashlib.HASH:
     """ Hashes a node ignoring positional information """
-    import hashlib
 
     lroles = [str(i) for i in node.roles if i not in (bblfsh.role_id("LEFT"),
                                                       bblfsh.role_id("RIGHT"))]
@@ -155,7 +158,7 @@ def hash_node(node, ignore_sideness=True):
     return _hash
 
 
-def instanced_calls(root_node, type_name, method_name):
+def instanced_calls(root_node: bblfsh.Node, type_name: str, method_name: str) -> List[bblfsh.Node]:
     """
     Detect a call from a symbol previously instanced from a certain type. This is
     somewhat fuzzy because it will give false positives for another symbol with
@@ -163,9 +166,9 @@ def instanced_calls(root_node, type_name, method_name):
     """
 
     # key: class name, value: list of usage positions
-    all_usages = []
+    all_usages: List[bblfsh.Node] = []
 
-    def search_usages(instance_node, search_node):
+    def search_usages(instance_node: bblfsh.Node, search_node: bblfsh.Node) -> List[bblfsh.Node]:
         these_usages = []
 
         instance_search_query = "//VariableDeclarationFragment/ClassInstanceCreation" + \
@@ -198,23 +201,23 @@ def instanced_calls(root_node, type_name, method_name):
     return all_usages
 
 
-def get_languages():
+def get_languages() -> List[str]:
     langs_dir = os.path.join(THIS_PATH, "checks")
 
     res = []
     for p in os.listdir(langs_dir):
         full_path = os.path.join(langs_dir, p)
-        if not os.path.isdir(full_path) or p in ("__pycache__"):
+        if not os.path.isdir(full_path) or p in ["__pycache__"]:
             continue
         res.append(p)
     return res
 
 
-def get_fixtures_dir():
+def get_fixtures_dir() -> str:
     return os.path.join(THIS_PATH, "fixtures")
 
 
-def get_checks_dir(lang: str):
+def get_checks_dir(lang: str) -> str:
     return os.path.join(THIS_PATH, "checks", lang)
 
 
@@ -222,7 +225,9 @@ class RunCheckException(Exception):
     pass
 
 
-def run_check(check_code: str, lang: str, uast) -> List[Dict[str, Any]]:
+def run_check(check_code: str, lang: str, uast: bblfsh.Node, json_result: bool = False) \
+        -> Union[str, Checks]:
+
     check_code = check_code.upper()
     check_path = os.path.join(THIS_PATH, "checks", lang, check_code + ".py")
 
@@ -231,25 +236,38 @@ def run_check(check_code: str, lang: str, uast) -> List[Dict[str, Any]]:
                                 .format(check_code, lang))
 
     check_module = importlib.import_module("bblfsh_sonar_checks.checks.{}.{}".format(lang, check_code))
-    checks = check_module.check(uast)
+    checks: Checks = check_module.check(uast)
 
     for c in checks:
         if "pos" not in c:
             c["pos"] = None
+        else:
+            p = c["pos"]
+            c["pos"] = {"line": p.line, "col": p.col, "offset": p.offset}
+
+    if json_result:
+        return json.dumps(checks)
 
     return checks
 
 
-def run_checks(check_codes: List[str], lang: str, uast) -> Dict[str, List[Dict[str, Any]]]:
-    res: Dict[str, List[Dict[str, Any]]] = {}
+def run_checks(check_codes: List[str], lang: str, uast: bblfsh.Node, json_result: bool = False) \
+        -> Union[str, Dict[str, Checks]]:
+
+    res: Dict[str, Checks] = {}
 
     for code in check_codes:
-        res[code] = run_check(code, lang, uast)
+        res[code] = cast(Checks, run_check(code, lang, uast))
+
+    if json_result:
+        return json.dumps(res)
 
     return res
 
 
-def run_default_fixture(path, check_fnc, conn_str: str = "0.0.0.0:9432", silent=False):
+def run_default_fixture(path: str, check_fnc: CheckFnc, conn_str: str = "0.0.0.0:9432", silent: bool=False) \
+        -> Checks:
+
     from pprint import pprint
 
     client = bblfsh.BblfshClient(conn_str)
