@@ -130,7 +130,7 @@ def get_methods(node: bblfsh.Node) -> List[Method]:
     return [Method(i) for i in bblfsh.filter(node, "//TypeDeclaration//FunctionGroup")]
 
 
-def hash_node(node: bblfsh.Node, ignore_sideness: bool=True) -> hashlib._Hash:
+def hash_node(node: bblfsh.Node, ignore_sideness: bool=True) -> hashlib._hashlib.HASH:
     """ Hashes a node ignoring positional information """
 
     lroles = [str(i) for i in node.roles if i not in (bblfsh.role_id("LEFT"),
