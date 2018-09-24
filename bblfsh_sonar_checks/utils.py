@@ -279,6 +279,10 @@ def run_default_fixture(path: str, check_fnc: CheckFnc, conn_str: str = "0.0.0.0
 
     return res
 
+def list_langs() -> List[str]:
+    langs_path = os.path.join(THIS_PATH, "checks")
+    return list(filter(lambda x: not x.startswith("_"), next(os.walk(langs_path))[1]))
+
 
 def list_checks(lang: str) -> List[str]:
     checks_path = os.path.join(THIS_PATH, "checks", lang)
